@@ -1,32 +1,62 @@
-# Змейка для Android
+# Змейка
 
-Та же игра, что в `snake.py`, но с сенсорным управлением: логика (`snake.py`)
-не менялась, сверху добавлен интерфейс на Kivy и сборка в APK.
+Одна игра в трёх оболочках: консоль, окно Windows и приложение Android.
+Игровая логика одна — класс `Game` в `snake.py`; оболочки её только рисуют
+и принимают ввод.
 
-![Вид игры](preview.png)
+| Сборка | Файлы | Как собирается |
+|--------|-------|----------------|
+| Android, APK (Kivy) | `main.py`, `buildozer.spec`, `icon.png` | GitHub Actions или Linux/Docker |
+| Windows, EXE (tkinter) | `snake_tk.py`, `desktop/app.py` | GitHub Actions или локально на Windows |
 
-*Скриншот Kivy-версии, запущенной на десктопе в окне 1000×460 — примерно
-такое соотношение сторон у телефона в горизонтальной ориентации.*
+![Змейка в Android-оболочке](preview.png)
+
+*Kivy-версия на десктопе в окне 1000×460 — примерно такое соотношение сторон
+у телефона в горизонтальной ориентации.*
 
 ```
-android/
-├── main.py               интерфейс: отрисовка, свайпы, пауза, рекорд
-├── snake.py              та же логика игры, что и в консольной версии
+.
+├── main.py               Android: интерфейс на Kivy (свайпы, пауза, рекорд)
+├── snake.py              игровая логика, общая для всех версий
+├── snake_tk.py           Windows: окно на tkinter
+├── desktop/
+│   ├── app.py            точка входа для сборки exe
+│   ├── build.ps1         пересборка exe локально
+│   ├── icon.ico          иконка приложения
+│   └── README.md         детали настольной сборки
 ├── buildozer.spec        параметры APK: имя, иконка, ориентация, SDK/NDK
-├── icon.png              иконка приложения
-├── build.sh              сборка на Linux/WSL2
-└── .github/workflows/    сборка APK в GitHub Actions (без своего тулчейна)
+├── build.sh              сборка APK на Linux/WSL2
+├── icon.png              иконка Android-приложения
+└── .github/workflows/    сборка APK и EXE без своего тулчейна
 ```
 
-## Проверить на компьютере
+## Запустить без сборки
 
 ```
-python -m pip install "kivy==2.3.1"
-python main.py
+python -m pip install "kivy==2.3.1"   # нужно только для Android-версии
+python main.py                        # Kivy: свайпы, а также мышь и клавиатура
+python snake_tk.py                    # окно на tkinter, зависимостей нет
 ```
 
-Управление: стрелки/WASD, пробел — пауза, Esc — пауза/выход.
+Управление: стрелки/WASD, пробел — пауза, R — заново, Esc — выход.
 На телефоне: свайп — поворот, касание — пауза/продолжить, кнопка «назад» — пауза.
+
+## Собрать EXE для Windows
+
+**GitHub Actions — ничего не устанавливая:** вкладка Actions → «Собрать EXE» →
+Run workflow. Через пару минут забрать `zmeika-windows-exe` из Artifacts.
+Workflow запускается и сам при изменениях в `snake_tk.py`, `snake.py`,
+`desktop/**` или самом файле workflow.
+
+**Локально** (Python 3.11+ и интернет для PyInstaller):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File desktop\build.ps1
+```
+
+Результат — `desktop\dist\Zmeika.exe`. Exe не подписан, поэтому SmartScreen
+может спросить: «Подробнее» → «Выполнить всё равно». Рекорд пишется в
+`snake_highscore.txt` рядом с exe. Подробности — в `desktop/README.md`.
 
 ## Собрать APK
 
@@ -36,7 +66,7 @@ Buildozer (то, что превращает Python+Kivy в APK) работае�
 ### 1. Docker (проще всего на Windows)
 
 Нужен [Docker Desktop](https://www.docker.com/products/docker-desktop/).
-Из папки `android`:
+Из корня репозитория:
 
 ```
 docker run --rm -v "%cd%":/home/user/hostcwd kivy/buildozer -v android debug
@@ -53,13 +83,12 @@ bash build.sh
 
 ### 3. GitHub Actions — вообще без установки тулчейна
 
-1. Завести пустой репозиторий на GitHub.
-2. Залить туда **содержимое папки `android`** (чтобы `buildozer.spec` был в корне).
-3. Открыть Actions → «Собрать APK» → Run workflow.
-4. Через 20–40 минут скачать `zmeika-debug-apk` из раздела Artifacts.
+1. Открыть Actions → «Собрать APK» → Run workflow.
+2. Через 20–40 минут скачать `zmeika-debug-apk` из раздела Artifacts.
 
-Эта сборка уже настроена: JDK 17, Android SDK/NDK, buildozer и кеш
-устанавливаются в workflow автоматически.
+Сборка уже настроена: JDK 17, Android SDK/NDK, buildozer и кеш ставятся
+в workflow автоматически. Запускается также при изменениях в `main.py`,
+`snake.py`, `buildozer.spec`, `build.sh` или `icon.png`.
 
 > Первая сборка всегда долгая: скачивается Android SDK + NDK (~3 ГБ) и
 > компилируется Python для Android. Повторные сборки идут в разы быстрее.
@@ -76,9 +105,11 @@ APK отладочный (debug), подписан отладочным ключ
 
 ## Если что-то менять
 
-- Скорость, очки, правила — в `snake.py` (класс `Game`), он общий с десктопом.
-- Размер поля — `GameWidget._pick_grid()` в `main.py`: число клеток
+- Скорость, очки, правила — в `snake.py` (класс `Game`), он общий для всех версий.
+- Размер поля Android — `GameWidget._pick_grid()` в `main.py`: число клеток
   подбирается под экран (целевой размер клетки — `dp(22)`), с ограничениями
   18–34 по ширине и 10–24 по высоте.
-- Цвета — константы `BG`, `BOARD`, `GRID`, `HEAD`, `BODY`, `FOOD` в `main.py`.
-- Версия Kivy — `requirements` в `buildozer.spec`.
+- Цвета Android — константы `BG`, `BOARD`, `GRID`, `HEAD`, `BODY`, `FOOD`
+  в `main.py`; цвета окна Windows — в `snake_tk.py`.
+- Версия Kivy — `requirements` в `buildozer.spec`; версия PyInstaller —
+  в `.github/workflows/build-exe.yml`.

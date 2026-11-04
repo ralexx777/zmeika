@@ -1,10 +1,17 @@
 name: Собрать APK
 
-# Запускается вручную (кнопка Run workflow) или на каждый push.
+# Запускается вручную (кнопка Run workflow) или при изменениях Android-части.
 # Готовый APK появляется в разделе Actions -> нужный запуск -> Artifacts.
 
 on:
   push:
+    paths:
+      - "main.py"
+      - "snake.py"
+      - "buildozer.spec"
+      - "build.sh"
+      - "icon.png"
+      - ".github/workflows/build-apk.yml"
   workflow_dispatch:
 
 jobs:

@@ -1,0 +1,52 @@
+name: Собрать EXE
+
+# Сборка настольной версии для Windows.
+# Запускается вручную или при изменениях кода игры/настольной части.
+# Готовый файл: Actions -> нужный запуск -> Artifacts -> zmeika-windows-exe.
+
+on:
+  push:
+    paths:
+      - "snake_tk.py"
+      - "snake.py"
+      - "desktop/**"
+      - ".github/workflows/build-exe.yml"
+  workflow_dispatch:
+
+jobs:
+  build-exe:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Установить PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pyinstaller==6.22.3"
+
+      - name: Собрать Zmeika.exe
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name Zmeika `
+            --icon "$env:GITHUB_WORKSPACE/desktop/icon.ico" `
+            --distpath desktop/dist `
+            --workpath build/pyi `
+            --specpath build `
+            --paths . `
+            desktop/app.py
+
+      - name: Проверить, что exe создан
+        run: |
+          if (-not (Test-Path "desktop/dist/Zmeika.exe")) { throw "Zmeika.exe не создан" }
+          Get-Item "desktop/dist/Zmeika.exe" | Select-Object Name, Length
+
+      - name: Выложить exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: zmeika-windows-exe
+          path: desktop/dist/Zmeika.exe
+          if-no-files-found: error

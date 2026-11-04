@@ -3,9 +3,17 @@ bin/
 .buildozer/
 *.apk
 
+# артефакты сборки exe
+build/
+desktop/dist/
+*.exe
+
 # python
 __pycache__/
 *.pyc
+
+# рекорд, создаётся при запуске из исходников
+snake_highscore.txt
 
 # локальные окружения
 .venv/
