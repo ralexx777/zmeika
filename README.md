@@ -86,8 +86,10 @@ bash build.sh
 1. Открыть Actions → «Собрать APK» → Run workflow.
 2. Через 20–40 минут скачать `zmeika-debug-apk` из раздела Artifacts.
 
-Сборка уже настроена: JDK 17, Android SDK/NDK, buildozer и кеш ставятся
-в workflow автоматически. Запускается также при изменениях в `main.py`,
+Сборка идёт в официальном образе `kivy/buildozer` (Docker), где уже стоят
+JDK, Android SDK/NDK и совместимые версии buildozer и python-for-android —
+поэтому результат не зависит от версий Python на раннере. Android SDK/NDK
+кешируются между запусками. Запускается также при изменениях в `main.py`,
 `snake.py`, `buildozer.spec`, `build.sh` или `icon.png`.
 
 > Первая сборка всегда долгая: скачивается Android SDK + NDK (~3 ГБ) и
