@@ -1,0 +1,12 @@
+﻿# артефакты сборки APK
+bin/
+.buildozer/
+*.apk
+
+# python
+__pycache__/
+*.pyc
+
+# локальные окружения
+.venv/
+.venv-kivy/
